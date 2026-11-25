@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BloomQuest</title>
+<meta name="description" content="Small steps. Big growth. Your daily planner, Discipline Points wallet and rewards.">
+<meta name="theme-color" content="#FAF4E8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1F1A16" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BloomQuest">
+<link rel="stylesheet" href="fonts.css">
+<style>
+html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+
+/* Layout: one phone-width column, cozy botanical board-game cards, fixed bottom tab bar. Palette from the PRD. */
+:root{
+  --cream:#FAF4E8; --card:#FFFDF8; --ink:#45352C; --muted:#86705F; --line:#E8DDC9;
+  --sage:#B6C5A5; --rose:#E9B7BD; --lav:#CEC1DF; --honey:#F1D49F; --brown:#735849; --blue:#B8CAD0;
+  --sage-bg:#E6EDDD; --rose-bg:#F8E3E5; --lav-bg:#EDE7F4; --honey-bg:#FAEDD2; --blue-bg:#E3ECEF; --brown-bg:#EEE4DC;
+  --earn:#4F7040; --deduct:#A54A57; --redeem:#6C5A92; --accent:#735849; --accent-ink:#FFF8EC;
+  --shadow:0 1px 0 rgba(115,88,73,.08),0 6px 18px -10px rgba(115,88,73,.35);
+  --f-display:"Caveat","Segoe Print","Bradley Hand",cursive;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --cream:#1F1A16; --card:#2A231E; --ink:#F2E7D8; --muted:#B6A595; --line:#3E342D;
+  --sage-bg:#33402B; --rose-bg:#4A2F33; --lav-bg:#3A3248; --honey-bg:#4A3C22; --blue-bg:#2C3B40; --brown-bg:#3E3129;
+  --earn:#A9C991; --deduct:#EE9BA6; --redeem:#C3B2E6; --accent:#E9C98F; --accent-ink:#2A1F16; --brown:#D8BDA6;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 8px 20px -12px rgba(0,0,0,.7); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --cream:#1F1A16; --card:#2A231E; --ink:#F2E7D8; --muted:#B6A595; --line:#3E342D;
+  --sage-bg:#33402B; --rose-bg:#4A2F33; --lav-bg:#3A3248; --honey-bg:#4A3C22; --blue-bg:#2C3B40; --brown-bg:#3E3129;
+  --earn:#A9C991; --deduct:#EE9BA6; --redeem:#C3B2E6; --accent:#E9C98F; --accent-ink:#2A1F16; --brown:#D8BDA6;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 8px 20px -12px rgba(0,0,0,.7); color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--cream);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:540px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 110px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-size:2.3rem;line-height:1;font-weight:700}
+h2{font-family:var(--f-display);font-size:1.7rem;line-height:1.05;font-weight:700}
+h3{font-size:1rem;font-weight:800}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.link{background:none;border:0;color:var(--accent);font-weight:800;padding:6px 2px;font-size:.9rem}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}
+.sync{font-size:.72rem;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:5px;padding-top:6px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync[data-s="synced"] i{background:var(--earn)} .sync[data-s="error"] i{background:var(--deduct)}
+
+/* wallet hero */
+.purse{background:var(--honey-bg);border:1px solid var(--line);border-radius:24px;padding:18px;position:relative;overflow:hidden}
+.purse svg.leaf{position:absolute;right:-18px;top:-14px;width:130px;opacity:.55;pointer-events:none}
+.bal{font-family:var(--f-num);font-weight:700;font-size:2.6rem;line-height:1;letter-spacing:-.02em}
+.bal small{font-size:1rem;font-weight:700;color:var(--muted);margin-left:4px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.trio div{background:var(--card);border-radius:14px;padding:8px 10px;min-width:0}
+.trio b{display:block;font-family:var(--f-num);font-size:1.1rem}
+.trio span{font-size:.72rem;color:var(--muted);font-weight:700}
+.c-earn{color:var(--earn)} .c-deduct{color:var(--deduct)} .c-redeem{color:var(--redeem)}
+
+/* progress */
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter>i{display:block;height:100%;border-radius:99px;background:var(--sage);transition:width .4s}
+.tier{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.8rem;padding:4px 10px;border-radius:99px;background:var(--sage-bg)}
+
+/* mini board */
+.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.mini button{background:none;border:0;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.72rem;font-weight:700;color:var(--muted)}
+.bud{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--card);font-family:var(--f-num);font-size:.7rem;color:var(--ink)}
+.bud.today{outline:2px dashed var(--accent);outline-offset:2px}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .t{font-weight:700;overflow-wrap:anywhere}
+.item .s{font-size:.8rem;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.pts{font-family:var(--f-num);font-weight:700;white-space:nowrap}
+.tx{width:100%;background:none;border:0;text-align:left}
+.empty{padding:14px 0;color:var(--muted);font-size:.9rem}
+
+/* task cards */
+.task{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.task+.task{margin-top:8px}
+.check{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--sage);background:var(--card);display:grid;place-items:center;padding:0}
+.check svg{width:18px;height:18px;opacity:0}
+.task[data-st="done"] .check{background:var(--sage);border-color:var(--sage)} .task[data-st="done"] .check svg{opacity:1}
+.task[data-st="done"] .tt{text-decoration:line-through;color:var(--muted)}
+.task[data-st="missed"]{background:var(--rose-bg)} .task[data-st="missed"] .check{border-color:var(--rose)}
+.task[data-st="excused"]{opacity:.7} .task[data-st="excused"] .check{border-style:dashed}
+.tt{font-weight:800;overflow-wrap:anywhere}
+.tm{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px}
+.more{flex:none;background:none;border:0;width:34px;height:34px;border-radius:10px;color:var(--muted);font-size:1.3rem;line-height:1}
+.pill{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--brown-bg)}
+
+/* date strip */
+.strip{display:grid;grid-template-columns:auto repeat(7,1fr) auto;gap:4px;align-items:center}
+.strip .d{border:1px solid transparent;background:none;border-radius:14px;padding:6px 0;display:flex;flex-direction:column;align-items:center;font-size:.7rem;font-weight:700;color:var(--muted)}
+.strip .d b{font-family:var(--f-num);font-size:1.05rem;color:var(--ink)}
+.strip .d.on{background:var(--card);border-color:var(--line);box-shadow:var(--shadow)}
+.strip .d.now b{color:var(--earn)}
+.nav-btn{background:var(--card);border:1px solid var(--line);border-radius:12px;width:34px;height:40px;display:grid;place-items:center}
+
+/* chips & buttons */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 12px;font-weight:700;font-size:.85rem;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.chip.earn{background:var(--sage-bg);border-color:transparent} .chip.deduct{background:var(--rose-bg);border-color:transparent}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;min-height:46px;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:var(--rose-bg);color:var(--deduct)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btns{display:flex;gap:8px;flex-wrap:wrap} .btns .btn{flex:1}
+.fab{position:fixed;right:max(16px,calc(50% - 254px));bottom:calc(84px + env(safe-area-inset-bottom,0px));border:0;border-radius:99px;padding:14px 18px;background:var(--accent);color:var(--accent-ink);font-weight:800;box-shadow:0 10px 24px -10px rgba(0,0,0,.45);z-index:5;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.fab svg{width:18px;height:18px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:14px;padding:3px;gap:3px}
+.seg button{border:0;border-radius:11px;padding:9px;font-weight:800;background:transparent;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink)}
+
+/* forms */
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:800;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--cream);font-weight:600;font-size:1rem;width:100%;min-width:0}
+.f textarea{min-height:64px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700}
+.toggle input{width:22px;height:22px;accent-color:var(--earn)}
+.err{color:var(--deduct);font-weight:700;font-size:.85rem}
+
+/* rewards */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reward{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0;text-align:left}
+.reward .gift{width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+.reward .gift svg{width:22px;height:22px}
+.reward .rn{font-weight:800;line-height:1.2;overflow-wrap:anywhere;flex:1}
+.star{background:none;border:0;padding:4px;color:var(--muted);font-size:1.15rem;line-height:1}
+.star[aria-pressed="true"]{color:#D9A93B}
+
+/* board */
+.board svg{width:100%;height:auto;display:block}
+.board .node{cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stats div{background:var(--cream);border-radius:14px;padding:10px 12px}
+.stats b{display:block;font-family:var(--f-num);font-size:1.25rem}
+.stats span{font-size:.75rem;color:var(--muted);font-weight:700}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:6}
+.tabs .in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;font-size:.7rem;font-weight:800;color:var(--muted);text-decoration:none;min-height:56px}
+.tabs a svg{width:23px;height:23px}
+.tabs a[aria-current="page"]{color:var(--ink)}
+.tabs a[aria-current="page"] svg{stroke:var(--ink)}
+.ico{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(40,28,20,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:540px;border-radius:24px 24px 0 0;max-height:92%;overflow-y:auto;padding:8px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));animation:up .22s ease-out}
+.grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--cream);padding:10px 16px;border-radius:99px;font-weight:700;font-size:.9rem;z-index:30;max-width:calc(100% - 32px);text-align:center}
+.burst{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:360px){.rgrid{grid-template-columns:1fr}.bal{font-size:2.2rem}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap" id="view" aria-live="polite"></div>
+<nav class="tabs" aria-label="Main"><div class="in" id="tabs"></div></nav>
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-5);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const today=()=>ymd(new Date());
+const weekStart=s=>{const d=parse(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d)};
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const fmtDay=s=>parse(s).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+const fmtLong=s=>parse(s).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+const fmtTime=t=>{if(!t)return'';const[h,m]=t.split(':').map(Number);return `${(h%12)||12}:${pad(m)} ${h>=12?'PM':'AM'}`};
+const sgn=n=>(n>0?'+':n<0?'−':'')+Math.abs(n);
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const COLORS=['sage','rose','lav','honey','blue','brown'];
+const ICON={
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  planner:'<rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 14l2 2 4-4"/>',
+  wallet:'<path d="M4 7.5V18a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5.5A1.5 1.5 0 0 1 4 6.5v0A1.5 1.5 0 0 1 5.5 5H17"/><circle cx="16" cy="14" r="1.3"/>',
+  rewards:'<rect x="3" y="8" width="18" height="5" rx="1.2"/><path d="M5 13v7h14v-7M12 8v12M12 8C10.5 4 6.5 3.8 6.5 6S9.5 8 12 8zm0 0c1.5-4 5.5-4.2 5.5-2S14.5 8 12 8z"/>',
+  profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.4-4 4.4-6 8-6s6.6 2 8 6"/>',
+  check:'<path d="M5 12.5 10 17 19 7.5"/>',
+  left:'<path d="M15 5 8 12l7 7"/>', right:'<path d="M9 5l7 7-7 7"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+};
+const icon=(k,cls='ico')=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+
+/* ---------- defaults (from the PRD) ---------- */
+function freshState(){
+  const cats=[['health','Health & fitness','sage'],['career','Career','blue'],['study','Studying','lav'],['projects','Projects','honey'],['money','Financial discipline','brown'],['growth','Personal development','sage'],['creative','Creativity','rose'],['selfcare','Self-care','rose'],['routine','Routines','honey']]
+    .map(([id,name,color])=>({id,name,color,active:true}));
+  const R=(name,type,pts,cat,limit)=>({id:uid(),name,type,pts,cat,limit,active:true});
+  const rules=[
+    R('Wake on time','EARN',10,'routine',1),R('Morning run','EARN',20,'health',1),R('Workout','EARN',20,'health',2),
+    R('Study session','EARN',30,'study',3),R('Project session','EARN',30,'projects',3),R('Interview preparation','EARN',25,'career',2),
+    R('Job application target','EARN',35,'career',1),R('Read 20 pages','EARN',15,'growth',2),R('Planned bedtime','EARN',20,'routine',1),
+    R('Daily journal','EARN',10,'growth',1),R('Avoid unnecessary purchases','EARN',20,'money',1),R('Complete daily priorities','EARN',50,'routine',1),
+    R('Wake late without excused reason','DEDUCT',10,'routine',1),R('Unplanned food delivery','DEDUCT',30,'money',1),
+    R('Unnecessary impulse purchase','DEDUCT',40,'money',1),R('Excessive doomscrolling','DEDUCT',20,'selfcare',1),
+    R('Avoidable procrastination','DEDUCT',15,'growth',1),R('Miss priority commitment without reason','DEDUCT',20,'career',1)];
+  const W=(name,cost,cat,wish=false)=>({id:uid(),name,cost,cat,wish,active:true});
+  const rewards=[W('One episode of The Office',40,'selfcare'),W('30 minutes Pinterest',30,'creative'),W('One hour illustration',60,'creative'),
+    W('Movie night',100,'selfcare',true),W('At-home pampering',120,'selfcare'),W('Creative hobby session',150,'creative'),
+    W('₹200 shopping allowance',250,'money'),W('Solo café date',350,'selfcare',true),W('New book',400,'growth'),W('₹500 wishlist purchase',550,'money')];
+  const t=today();
+  const T=(title,start,end,pts,miss,cat)=>({id:uid(),title,start,end,pts,miss,cat,date:t,repeat:'daily',notes:'',priority:'normal'});
+  const tasks=[T('Wake on time','07:00','',10,10,'routine'),T('Morning run','07:15','07:45',20,0,'health'),T('Study session','10:00','11:30',30,0,'study'),
+    T('Portfolio project session','15:00','16:30',30,0,'projects'),T('Read 20 pages','21:00','21:30',15,0,'growth'),T('Planned bedtime','23:00','',20,0,'routine')];
+  return {v:1,profile:{name:'',target:80},cats,rules,rewards,tasks,logs:{},txs:[],reds:[],updatedAt:0};
+}
+
+/* ---------- persistence: everything stays on this phone ---------- */
+const LS='bloomquest.v1';
+let S=(()=>{try{const r=localStorage.getItem(LS);if(r)return JSON.parse(r)}catch(e){}return freshState()})();
+const store={status:'local'};
+const SYNC_LABEL={local:'Saved on phone',error:'Not saved! Export a backup',offline:'Offline · saved'};
+function syncState(){return localOK?(navigator.onLine?'local':'offline'):'error'}
+let localOK=true;
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(S));localOK=true}catch(e){localOK=false}}
+function setSync(){store.status=syncState();const el=$('#sync');if(el){el.dataset.s=store.status==='error'?'error':'synced';el.lastChild.textContent=SYNC_LABEL[store.status]}}
+function commit(){S.updatedAt=Date.now();saveLocal();store.status=syncState();render()}
+window.addEventListener('online',setSync);window.addEventListener('offline',setSync);
+/* ask the browser not to clear this app's storage when space runs low */
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{})}
+/* offline cache */
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
+/* install button (Android/Chrome) */
+let installEvt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(ui.tab==='profile')render()});
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+
+/* ---------- domain logic ---------- */
+const cat=id=>S.cats.find(c=>c.id===id)||{name:'Uncategorized',color:'brown'};
+const occurs=(t,d)=>{
+  if(d<t.date||(t.until&&d>t.until))return false;
+  if(t.repeat==='daily')return true;
+  const w=parse(d).getDay();
+  if(t.repeat==='weekdays')return w>=1&&w<=5;
+  if(t.repeat==='weekly')return w===parse(t.date).getDay();
+  return d===t.date;
+};
+const lk=(t,d)=>t.id+'|'+d;
+const status=(t,d)=>S.logs[lk(t,d)]||'pending';
+const tasksOn=d=>S.tasks.filter(t=>occurs(t,d)).sort((a,b)=>(a.start||'99').localeCompare(b.start||'99'));
+const live=x=>!x.reversed&&x.type!=='REVERSAL';
+const activeByKey=k=>S.txs.find(x=>x.key===k&&live(x));
+function addTx(o){
+  if(o.key&&activeByKey(o.key))return null;              // never award or deduct twice for the same event
+  const tx={id:uid(),ts:Date.now(),date:today(),...o};
+  S.txs.push(tx);return tx;
+}
+function reverse(id,why){
+  const x=S.txs.find(t=>t.id===id);if(!x||!live(x))return null;
+  const r=addTx({type:'REVERSAL',pts:-x.pts,desc:'Reversed: '+x.desc,date:x.date,cat:x.cat,reversalOf:x.id,note:why||''});
+  x.reversed=r.id;return r;
+}
+const balance=()=>S.txs.reduce((s,x)=>s+x.pts,0);
+function setStatus(t,d,st){
+  const prev=status(t,d);if(prev===st)return;
+  if(prev==='done'){const x=activeByKey('done:'+lk(t,d));if(x)reverse(x.id,'Task unchecked')}
+  if(prev==='missed'){const x=activeByKey('miss:'+lk(t,d));if(x)reverse(x.id,'Task no longer missed')}
+  if(st==='done'&&t.pts>0)addTx({type:'EARN',pts:t.pts,desc:t.title,date:d,cat:t.cat,key:'done:'+lk(t,d),taskId:t.id});
+  if(st==='missed'&&t.miss>0)addTx({type:'DEDUCT',pts:-t.miss,desc:'Missed: '+t.title,date:d,cat:t.cat,key:'miss:'+lk(t,d),taskId:t.id});
+  if(st==='pending')delete S.logs[lk(t,d)];else S.logs[lk(t,d)]=st;
+}
+function dayStats(d){
+  let earned=0,deducted=0,redeemed=0;
+  for(const x of S.txs){if(x.date!==d||!live(x))continue;
+    if(x.type==='EARN'||(x.type==='ADJUSTMENT'&&x.pts>0))earned+=x.pts;
+    else if(x.type==='DEDUCT')deducted-=x.pts;
+    else if(x.type==='REDEEM')redeemed-=x.pts;}
+  const ts=tasksOn(d);const elig=ts.filter(t=>!['excused','rescheduled'].includes(status(t,d)));
+  const done=elig.filter(t=>status(t,d)==='done').length;
+  const pct=elig.length?Math.round(done/elig.length*100):null;
+  return {earned,deducted,redeemed,net:earned-deducted,pct,done,elig:elig.length,total:ts.length};
+}
+function tier(p){
+  if(p===null)return{name:'No scheduled tasks',fill:'var(--line)',bg:'var(--brown-bg)'};
+  if(p>=90)return{name:'Elite Day',fill:'#E3B04B',bg:'var(--honey-bg)'};
+  if(p>=80)return{name:'Gold Day',fill:'var(--honey)',bg:'var(--honey-bg)'};
+  if(p>=60)return{name:'Silver Day',fill:'var(--lav)',bg:'var(--lav-bg)'};
+  if(p>=40)return{name:'Bronze Day',fill:'var(--rose)',bg:'var(--rose-bg)'};
+  return{name:'Review and Reset',fill:'var(--blue)',bg:'var(--blue-bg)'};
+}
+function rangeNet(from,to){let e=0,dd=0,r=0;for(const x of S.txs){if(!live(x)||x.date<from||x.date>to)continue;
+  if(x.type==='EARN'||(x.type==='ADJUSTMENT'&&x.pts>0))e+=x.pts;else if(x.type==='DEDUCT'||(x.type==='ADJUSTMENT'&&x.pts<0))dd-=x.pts;else if(x.type==='REDEEM')r-=x.pts;}
+  return{e,dd,r,net:e-dd}}
+const ruleUsesOn=(ruleId,d)=>S.txs.filter(x=>x.ruleId===ruleId&&x.date===d&&live(x)).length;
+
+/* ---------- UI shell ---------- */
+let ui={tab:'home',date:today(),week:weekStart(today()),filter:'ALL',showAll:false};
+const TABS=[['home','Home'],['planner','Planner'],['wallet','Wallet'],['rewards','Rewards'],['profile','Profile']];
+function toast(m){const r=$('#toastRoot');r.innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML='',2200)}
+function route(){const h=location.hash.slice(1);ui.tab=[...TABS.map(t=>t[0]),'board'].includes(h)?h:'home';render();window.scrollTo(0,0)}
+window.addEventListener('hashchange',route);
+function syncBadge(){store.status=syncState();return `<div class="sync" id="sync" data-s="${store.status==='error'?'error':'synced'}"><i></i><span>${SYNC_LABEL[store.status]}</span></div>`}
+function catDot(id){return `<span class="dot" style="background:var(--${cat(id).color})"></span>`}
+
+function render(){
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<a href="#${k}" ${ui.tab===k||(k==='home'&&ui.tab==='board')?'aria-current="page"':''}>${icon(k)}<span>${l}</span></a>`).join('');
+  $('#view').innerHTML=(VIEWS[ui.tab]||VIEWS.home)();
+}
+
+/* ---------- Home ---------- */
+const greet=()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
+function txRow(x){
+  const cls=x.pts>=0?'c-earn':(x.type==='REDEEM'?'c-redeem':'c-deduct');
+  const lbl={EARN:'Earned',DEDUCT:'Deducted',REDEEM:'Redeemed',REFUND:'Refund',ADJUSTMENT:'Adjustment',REVERSAL:'Reversal'}[x.type];
+  return `<button class="tx item" data-act="tx" data-id="${x.id}">${catDot(x.cat)}<div class="grow"><div class="t" ${x.reversed?'style="text-decoration:line-through;opacity:.6"':''}>${esc(x.desc)}</div><div class="s">${lbl} · ${fmtDay(x.date)}${x.spend?` · spent ${esc(x.spend)}`:''}</div></div><span class="pts num ${cls}">${sgn(x.pts)}</span></button>`;
+}
+function miniBoard(){
+  const ws=weekStart(today());
+  return `<div class="mini">${[0,1,2,3,4,5,6].map(i=>{const d=addDays(ws,i);const st=dayStats(d);const tr=tier(d>today()?null:st.pct);
+    return `<button data-act="day" data-d="${d}" aria-label="${fmtLong(d)}"><span>${DOW[parse(d).getDay()][0]}</span><span class="bud ${d===today()?'today':''}" style="background:${d>today()?'var(--card)':tr.fill}">${d>today()?'':(st.net?sgn(st.net):'·')}</span></button>`}).join('')}</div>`;
+}
+const VIEWS={};
+VIEWS.home=()=>{
+  const t=today(),st=dayStats(t),tr=tier(st.pct),bal=balance();
+  const up=tasksOn(t).filter(x=>status(x,t)==='pending').slice(0,4);
+  const recent=[...S.txs].sort((a,b)=>b.ts-a.ts).slice(0,4);
+  const goal=S.rewards.filter(r=>r.wish&&r.active).sort((a,b)=>a.cost-b.cost)[0];
+  return `<div class="stack">
+  <div class="top"><div><div class="eyebrow">${esc(fmtLong(t))}</div><h1>${greet()}${S.profile.name?', '+esc(S.profile.name):''}</h1></div>${syncBadge()}</div>
+  <section class="purse" aria-label="Wallet">
+    <svg class="leaf" viewBox="0 0 120 120" aria-hidden="true"><path d="M20 100C30 50 60 25 110 15c-5 45-30 80-90 85z" fill="var(--sage)"/><path d="M22 98C50 70 75 45 104 22" stroke="var(--card)" stroke-width="2" fill="none"/></svg>
+    <div class="eyebrow">Discipline Points</div>
+    <div class="bal num" id="bal">${bal.toLocaleString()}<small>DP</small></div>
+    <div class="trio"><div><b class="c-earn">${sgn(st.earned)}</b><span>Earned today</span></div><div><b class="c-deduct">${st.deducted?'−'+st.deducted:'0'}</b><span>Deducted</span></div><div><b class="c-redeem">${st.redeemed?'−'+st.redeemed:'0'}</b><span>Redeemed</span></div></div>
+  </section>
+  <section class="card">
+    <div class="sec-head"><h3>Today's progress</h3><span class="tier" style="background:${tr.bg}">${tr.name}</span></div>
+    <div class="row between small muted" style="margin-bottom:6px"><span>${st.done} of ${st.elig} tasks done</span><span class="num">${st.pct??0}%</span></div>
+    <div class="meter" role="progressbar" aria-valuenow="${st.pct??0}" aria-valuemin="0" aria-valuemax="100"><i style="width:${st.pct??0}%"></i></div>
+  </section>
+  <section class="card"><div class="sec-head"><h3>This week</h3><a class="link" href="#board">Open board</a></div>${miniBoard()}</section>
+  <section class="card"><div class="sec-head"><h3>Up next</h3><a class="link" href="#planner">Planner</a></div>
+    ${up.length?up.map(x=>taskCard(x,t)).join(''):'<div class="empty">Nothing pending today. Add a task in the Planner.</div>'}</section>
+  ${goal?`<section class="card"><div class="sec-head"><h3>Saving up for</h3><a class="link" href="#rewards">Rewards</a></div>
+    <div class="row between"><b>${esc(goal.name)}</b><span class="num small">${Math.min(bal,goal.cost)} / ${goal.cost} DP</span></div>
+    <div class="meter" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,bal/goal.cost*100))}%;background:var(--honey)"></i></div></section>`:''}
+  <section class="card"><div class="sec-head"><h3>Recent activity</h3><a class="link" href="#wallet">Wallet</a></div>
+    <div class="list">${recent.length?recent.map(txRow).join(''):'<div class="empty">No points yet. Tick off a task or tap “Log” to record one.</div>'}</div></section>
+  </div><button class="fab" data-act="log">${icon('plus')}Log activity</button>`;
+};
+
+/* ---------- Planner ---------- */
+function taskCard(t,d){
+  const st=status(t,d),c=cat(t.cat);
+  const lbl={done:'Done',missed:'Missed',excused:'Excused',pending:''}[st]||'';
+  return `<div class="task" data-st="${st}">
+    <button class="check" data-act="toggle" data-id="${t.id}" data-d="${d}" aria-label="${st==='done'?'Mark not done':'Mark done'}: ${esc(t.title)}">${icon('check')}</button>
+    <div class="grow"><div class="tt">${esc(t.title)}</div>
+      <div class="tm">${t.start?`<span>${fmtTime(t.start)}${t.end?' – '+fmtTime(t.end):''}</span>`:''}<span class="row" style="gap:5px">${catDot(t.cat)}${esc(c.name)}</span>
+      <span class="num c-earn">+${t.pts}</span>${t.miss?`<span class="num c-deduct">−${t.miss} if missed</span>`:''}${t.repeat!=='none'?`<span>↻ ${t.repeat}</span>`:''}${lbl&&st!=='done'?`<span class="pill">${lbl}</span>`:''}</div></div>
+    <button class="more" data-act="taskmenu" data-id="${t.id}" data-d="${d}" aria-label="More for ${esc(t.title)}">⋯</button></div>`;
+}
+VIEWS.planner=()=>{
+  const d=ui.date,ws=weekStart(d),st=dayStats(d),ts=tasksOn(d);
+  return `<div class="stack">
+  <div class="top"><div><div class="eyebrow">Planner</div><h1>${esc(fmtLong(d))}</h1></div>${syncBadge()}</div>
+  <div class="strip">
+    <button class="nav-btn" data-act="pweek" data-n="-7" aria-label="Previous week">${icon('left')}</button>
+    ${[0,1,2,3,4,5,6].map(i=>{const x=addDays(ws,i);return `<button class="d ${x===d?'on':''} ${x===today()?'now':''}" data-act="pick" data-d="${x}">${DOW[parse(x).getDay()]}<b>${parse(x).getDate()}</b></button>`}).join('')}
+    <button class="nav-btn" data-act="pweek" data-n="7" aria-label="Next week">${icon('right')}</button>
+  </div>
+  ${d!==today()?`<button class="link" data-act="pick" data-d="${today()}" style="align-self:flex-start">Back to today</button>`:''}
+  <div class="card row between"><div><div class="eyebrow">Day summary</div><div class="small"><b>${st.done}/${st.elig}</b> done · <span class="c-earn num">+${st.earned}</span> · <span class="c-deduct num">−${st.deducted}</span></div></div><span class="tier" style="background:${tier(st.pct).bg}">${tier(st.pct).name}</span></div>
+  <div>${ts.length?ts.map(t=>taskCard(t,d)).join(''):'<div class="card empty">No tasks on this day yet.</div>'}</div>
+  <p class="small muted">Tap the circle to complete a task. Points are added once. Use ⋯ to mark missed, excused, reschedule, edit or duplicate.</p>
+  </div><button class="fab" data-act="addtask">${icon('plus')}Add task</button>`;
+};
+
+/* ---------- Weekly board ---------- */
+VIEWS.board=()=>{
+  const ws=ui.week,days=[0,1,2,3,4,5,6].map(i=>addDays(ws,i));
+  const W=340,P=[0,1,2,3,4,5,6].map(i=>[i%2?225:115,48+i*64]);
+  let path=`M${P[0][0]} ${P[0][1]}`;for(let i=1;i<7;i++){const[a,b]=P[i-1],[c,e]=P[i];const my=(b+e)/2;path+=` C${a} ${my} ${c} ${my} ${c} ${e}`}
+  const tot=rangeNet(days[0],days[6]);let pcts=[];
+  const nodes=days.map((d,i)=>{const st=dayStats(d);const fut=d>today();const tr=tier(fut?null:st.pct);if(!fut&&st.pct!==null)pcts.push(st.pct);
+    const[x,y]=P[i];const left=x<W/2;const lx=left?x-34:x+34;const anc=left?'end':'start';
+    const petals=[0,72,144,216,288].map(a=>`<ellipse cx="${x}" cy="${y-17}" rx="9" ry="13" transform="rotate(${a} ${x} ${y})" fill="${fut?'var(--card)':tr.fill}" stroke="var(--line)" stroke-width="1.5"/>`).join('');
+    return `<g class="node" data-act="day" data-d="${d}" role="button" tabindex="0" aria-label="${fmtLong(d)}: ${tr.name}">
+      ${petals}<circle cx="${x}" cy="${y}" r="13" fill="var(--card)" stroke="${d===today()?'var(--accent)':'var(--line)'}" stroke-width="${d===today()?3:1.5}"/>
+      <text x="${x}" y="${y+4}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="var(--ink)">${parse(d).getDate()}</text>
+      <text x="${lx}" y="${y-6}" text-anchor="${anc}" font-family="Caveat,cursive" font-size="21" font-weight="700" fill="var(--ink)">${DOW[parse(d).getDay()]}${d===today()?' · today':''}</text>
+      <text x="${lx}" y="${y+12}" text-anchor="${anc}" font-family="Nunito,sans-serif" font-size="11.5" font-weight="700" fill="var(--muted)">${fut?'ahead':(st.pct===null?'no tasks':st.pct+'%')}${!fut&&(st.earned||st.deducted)?' · '+sgn(st.net)+' DP':''}</text></g>`}).join('');
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null;
+  const nextR=S.rewards.filter(r=>r.active&&r.cost>balance()).sort((a,b)=>a.cost-b.cost)[0];
+  return `<div class="stack">
+  <div class="top"><div><a class="link" href="#home">← Home</a><h1>Weekly board</h1></div>${syncBadge()}</div>
+  <div class="row between card" style="padding:8px">
+    <button class="nav-btn" data-act="bweek" data-n="-7" aria-label="Previous week">${icon('left')}</button>
+    <b class="small">${fmtDay(days[0])} – ${fmtDay(days[6])}</b>
+    <button class="nav-btn" data-act="bweek" data-n="7" aria-label="Next week">${icon('right')}</button></div>
+  <section class="card board"><svg viewBox="0 0 ${W} 520" role="group" aria-label="Week path">
+    <path d="${path}" fill="none" stroke="var(--sage)" stroke-width="14" stroke-linecap="round" opacity=".55"/>
+    <path d="${path}" fill="none" stroke="var(--card)" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+    ${nodes}
+    <g transform="translate(128 488)" aria-hidden="true"><rect x="-4" y="-4" width="30" height="24" rx="4" fill="var(--rose)"/><rect x="9" y="-4" width="4" height="24" fill="var(--card)"/><text x="34" y="13" font-family="Caveat,cursive" font-size="18" font-weight="700" fill="var(--ink)">week reward</text></g>
+  </svg></section>
+  <section class="card"><h3 style="margin-bottom:10px">Week summary</h3><div class="stats">
+    <div><b class="c-earn">+${tot.e}</b><span>Earned</span></div><div><b class="c-deduct">−${tot.dd}</b><span>Deducted</span></div>
+    <div><b>${sgn(tot.net)}</b><span>Net behaviour points</span></div><div><b>${avg===null?'–':avg+'%'}</b><span>Avg completion</span></div></div>
+    ${nextR?`<p class="small muted" style="margin:10px 0 0">Next milestone: <b>${esc(nextR.name)}</b> at ${nextR.cost} DP (${nextR.cost-balance()} to go).</p>`:''}
+    <p class="small muted" style="margin:6px 0 0">The board resets each Monday. Your wallet balance carries forward.</p></section>
+  </div>`;
+};
+
+/* ---------- Wallet ---------- */
+VIEWS.wallet=()=>{
+  const t=today(),bal=balance();
+  const td=rangeNet(t,t),wk=rangeNet(weekStart(t),t),mo=rangeNet(t.slice(0,8)+'01',t);
+  let life={e:0,d:0,r:0};for(const x of S.txs){if(!live(x))continue;if(x.type==='EARN')life.e+=x.pts;else if(x.type==='DEDUCT')life.d-=x.pts;else if(x.type==='REDEEM')life.r-=x.pts}
+  const F=ui.filter;let list=[...S.txs].sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
+  if(F!=='ALL')list=list.filter(x=>F==='OTHER'?!['EARN','DEDUCT','REDEEM'].includes(x.type):x.type===F);
+  const shown=ui.showAll?list:list.slice(0,40);
+  return `<div class="stack">
+  <div class="top"><div><div class="eyebrow">Wallet</div><h1>Discipline Points</h1></div>${syncBadge()}</div>
+  <section class="purse"><div class="eyebrow">Available balance</div><div class="bal num">${bal.toLocaleString()}<small>DP</small></div>
+    <div class="trio"><div><b>${sgn(td.net)}</b><span>Today net</span></div><div><b>${sgn(wk.net)}</b><span>This week</span></div><div><b>${sgn(mo.net)}</b><span>This month</span></div></div></section>
+  <section class="card"><div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div><b class="c-earn">${life.e}</b><span>Lifetime earned</span></div><div><b class="c-deduct">${life.d}</b><span>Lifetime deducted</span></div><div><b class="c-redeem">${life.r}</b><span>Lifetime redeemed</span></div></div></section>
+  <section class="card"><div class="sec-head"><h3>History</h3><span class="small muted">${list.length} entries</span></div>
+    <div class="chips" style="margin-bottom:6px">${[['ALL','All'],['EARN','Earned'],['DEDUCT','Deducted'],['REDEEM','Redeemed'],['OTHER','Corrections']].map(([k,l])=>`<button class="chip" data-act="filter" data-f="${k}" aria-pressed="${F===k}">${l}</button>`).join('')}</div>
+    <div class="list">${shown.length?shown.map(txRow).join(''):'<div class="empty">No entries here yet.</div>'}</div>
+    ${list.length>shown.length?`<button class="btn ghost" style="width:100%;margin-top:8px" data-act="showall">Show all ${list.length}</button>`:''}
+    <p class="small muted" style="margin:8px 0 0">Tap an entry to reverse or correct it. Nothing is deleted, so your history always adds up.</p></section>
+  </div><button class="fab" data-act="log">${icon('plus')}Log activity</button>`;
+};
+
+/* ---------- Rewards ---------- */
+VIEWS.rewards=()=>{
+  const bal=balance();const rs=S.rewards.filter(r=>r.active).sort((a,b)=>(b.wish-a.wish)||a.cost-b.cost);
+  const open=S.reds.filter(r=>r.status==='redeemed'),past=S.reds.filter(r=>r.status!=='redeemed').slice(-8).reverse();
+  return `<div class="stack">
+  <div class="top"><div><div class="eyebrow">Reward marketplace</div><h1>Treat yourself</h1></div>${syncBadge()}</div>
+  <div class="card row between"><span class="eyebrow">You have</span><span class="num" style="font-size:1.5rem;font-weight:700">${bal.toLocaleString()} DP</span></div>
+  ${open.length?`<section class="card"><h3 style="margin-bottom:6px">Ready to enjoy</h3><div class="list">${open.map(r=>`<div class="item"><div class="grow"><div class="t">${esc(r.name)}</div><div class="s">Redeemed ${fmtDay(r.date)} · ${r.pts} DP</div></div>
+    <button class="chip earn" data-act="claim" data-id="${r.id}">Enjoyed it</button><button class="chip" data-act="refund" data-id="${r.id}">Cancel</button></div>`).join('')}</div></section>`:''}
+  <div class="rgrid">${rs.map(r=>{const ok=bal>=r.cost;return `<div class="reward">
+    <div class="row between"><span class="gift" style="background:var(--${cat(r.cat).color}-bg)">${icon('rewards')}</span><button class="star" data-act="wish" data-id="${r.id}" aria-pressed="${!!r.wish}" aria-label="Wishlist ${esc(r.name)}">${r.wish?'★':'☆'}</button></div>
+    <div class="rn">${esc(r.name)}</div>
+    <div class="row between"><span class="num" style="font-weight:700">${r.cost} DP</span><button class="link" data-act="editreward" data-id="${r.id}" style="font-size:.8rem">Edit</button></div>
+    <div class="meter" style="height:6px"><i style="width:${Math.max(0,Math.min(100,bal/r.cost*100))}%;background:${ok?'var(--sage)':'var(--honey)'}"></i></div>
+    <button class="btn ${ok?'':'ghost'}" data-act="redeem" data-id="${r.id}" ${ok?'':'disabled'}>${ok?'Redeem':`${r.cost-bal} DP to go`}</button></div>`}).join('')}</div>
+  <button class="btn ghost" data-act="editreward">+ Create a reward</button>
+  ${past.length?`<section class="card"><h3 style="margin-bottom:6px">Redemption history</h3><div class="list">${past.map(r=>`<div class="item"><div class="grow"><div class="t">${esc(r.name)}</div><div class="s">${fmtDay(r.date)} · ${r.status==='claimed'?'Enjoyed':'Cancelled, points refunded'}</div></div><span class="pts num c-redeem">${r.status==='refunded'?'0':'−'+r.pts}</span></div>`).join('')}</div></section>`:''}
+  <p class="small muted">DP is not real money. Money rewards still need to fit your actual budget.</p></div>`;
+};
+
+/* ---------- Profile ---------- */
+VIEWS.profile=()=>{
+  const earn=S.rules.filter(r=>r.type==='EARN'),ded=S.rules.filter(r=>r.type==='DEDUCT');
+  const rl=r=>`<button class="tx item" data-act="editrule" data-id="${r.id}" ${r.active?'':'style="opacity:.5"'}>${catDot(r.cat)}<div class="grow"><div class="t">${esc(r.name)}</div><div class="s">${esc(cat(r.cat).name)}${r.limit?` · max ${r.limit}/day`:''}${r.active?'':' · off'}</div></div><span class="pts num ${r.type==='EARN'?'c-earn':'c-deduct'}">${r.type==='EARN'?'+':'−'}${r.pts}</span></button>`;
+  return `<div class="stack">
+  <div class="top"><div><div class="eyebrow">Profile & settings</div><h1>Your garden rules</h1></div>${syncBadge()}</div>
+  <section class="card stack" style="gap:10px">
+    <label class="f">Display name<input id="pName" value="${esc(S.profile.name)}" placeholder="Your name" maxlength="40"></label>
+    <label class="f">Daily completion target (%)<input id="pTarget" type="number" inputmode="numeric" min="10" max="100" value="${S.profile.target}"></label>
+    <button class="btn" data-act="saveprofile">Save profile</button></section>
+  <section class="card"><div class="sec-head"><h3>Earning rules</h3><button class="link" data-act="editrule" data-type="EARN">+ Add</button></div><div class="list">${earn.map(rl).join('')}</div></section>
+  <section class="card"><div class="sec-head"><h3>Deduction rules</h3><button class="link" data-act="editrule" data-type="DEDUCT">+ Add</button></div><div class="list">${ded.map(rl).join('')}</div>
+    <p class="small muted" style="margin:8px 0 0">Deductions are for avoidable choices, never for illness, rest or real changes of plan. Rule changes only affect new entries.</p></section>
+  <section class="card"><div class="sec-head"><h3>Categories</h3><button class="link" data-act="editcat">+ Add</button></div>
+    <div class="chips">${S.cats.filter(c=>c.active).map(c=>`<button class="chip" data-act="editcat" data-id="${c.id}" style="background:var(--${c.color}-bg);border-color:transparent">${esc(c.name)}</button>`).join('')}</div></section>
+  <section class="card stack" style="gap:10px"><h3>Your data</h3>
+    <p class="small muted" style="margin:0">Everything lives only on this phone and works with no internet. Nothing is sent anywhere. If you uninstall the app or clear browser data, it's gone, so export a backup now and then.${S.lastBackup?` Last backup: ${new Date(S.lastBackup).toLocaleDateString()}.`:' No backup yet.'}</p>
+    <div class="btns"><button class="btn ghost" data-act="export">Export backup</button><label class="btn ghost" style="text-align:center;display:grid;place-items:center">Import backup<input type="file" id="importFile" accept=".json,application/json" hidden></label></div>
+    <button class="btn danger" data-act="reset">Start over</button></section>
+  ${standalone()?'':`<section class="card stack" style="gap:8px"><h3>Install on your phone</h3>${installEvt?'<button class="btn" data-act="install">Install BloomQuest</button>':''}<p class="small muted" style="margin:0">iPhone: open this page in Safari, tap Share, then “Add to Home Screen”. Android: in Chrome, tap ⋮ then “Install app”. After that it opens from its icon and works with no internet.</p></section>`}
+  </div>`;
+};
+
+/* ---------- sheets ---------- */
+function sheet(html,onMount){
+  $('#sheetRoot').innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
+  const first=$('#sheetRoot input,#sheetRoot select,#sheetRoot button.btn');if(first)setTimeout(()=>first.focus({preventScroll:true}),50);
+  onMount&&onMount();
+}
+const closeSheet=()=>{$('#sheetRoot').innerHTML=''};
+const catOptions=sel=>S.cats.filter(c=>c.active||c.id===sel).map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${esc(c.name)}</option>`).join('');
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+const intv=id=>{const n=parseInt(val(id),10);return Number.isFinite(n)?n:NaN};
+
+function logSheet(type='EARN',pre={}){
+  const rules=S.rules.filter(r=>r.active&&r.type===type);
+  sheet(`<div class="stack"><h2>Log activity</h2>
+    <div class="seg"><button data-act="logtype" data-t="EARN" aria-pressed="${type==='EARN'}">Earn points</button><button data-act="logtype" data-t="DEDUCT" aria-pressed="${type==='DEDUCT'}">Deduct points</button></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Quick pick</div><div class="chips">${rules.map(r=>`<button class="chip ${type==='EARN'?'earn':'deduct'}" data-act="pickrule" data-id="${r.id}">${esc(r.name)} <span class="num">${type==='EARN'?'+':'−'}${r.pts}</span></button>`).join('')}</div></div>
+    <input type="hidden" id="lRule" value="${esc(pre.ruleId||'')}"><input type="hidden" id="lType" value="${type}"><input type="hidden" id="lFix" value="${esc(pre.fixOf||'')}">
+    <label class="f">Activity<input id="lName" value="${esc(pre.desc||'')}" placeholder="${type==='EARN'?'e.g. Project work':'e.g. Unplanned shawarma order'}"></label>
+    <div class="grid2"><label class="f">Points<input id="lPts" type="number" inputmode="numeric" min="1" value="${pre.pts?Math.abs(pre.pts):''}"></label>
+      <label class="f">Date<input id="lDate" type="date" value="${pre.date||today()}" max="${today()}"></label></div>
+    <label class="f">Category<select id="lCat">${catOptions(pre.cat||'routine')}</select></label>
+    ${type==='DEDUCT'?`<label class="f">Money actually spent (optional)<input id="lSpend" inputmode="decimal" value="${esc(pre.spend||'')}" placeholder="e.g. ₹350"></label>`:''}
+    <label class="f">Note (optional)<input id="lNote" value="${esc(pre.note||'')}"></label>
+    <div id="lErr" class="err" role="alert"></div>
+    <button class="btn" data-act="savelog">${pre.fixOf?'Save correction':(type==='EARN'?'Add points':'Deduct points')}</button></div>`);
+}
+function saveLog(){
+  const type=val('lType'),name=val('lName'),pts=intv('lPts'),date=val('lDate'),ruleId=val('lRule'),fix=val('lFix');
+  const err=m=>{$('#lErr').textContent=m};
+  if(!name)return err('Give the activity a name.');
+  if(!(pts>0)||pts>10000)return err('Points must be a whole number from 1 to 10,000.');
+  if(!date||date>today())return err('Pick today or an earlier date.');
+  const rule=S.rules.find(r=>r.id===ruleId);
+  if(rule&&rule.name===name&&rule.limit&&ruleUsesOn(rule.id,date)>=rule.limit&&!fix)
+    return err(`“${rule.name}” is already logged ${rule.limit}× on ${fmtDay(date)}. Its daily limit stops double counting. Raise the limit in Profile if this really happened again.`);
+  if(fix)reverse(fix,'Corrected');
+  addTx({type,pts:type==='EARN'?pts:-pts,desc:name,date,cat:val('lCat'),ruleId:rule&&rule.name===name?rule.id:undefined,spend:val('lSpend')||undefined,note:val('lNote')||undefined,replaces:fix||undefined});
+  closeSheet();commit();toast(type==='EARN'?`+${pts} DP added`:`−${pts} DP deducted`);
+}
+function txSheet(id){
+  const x=S.txs.find(t=>t.id===id);if(!x)return;
+  const canFix=live(x)&&['EARN','DEDUCT','ADJUSTMENT'].includes(x.type);
+  const orig=x.reversalOf&&S.txs.find(t=>t.id===x.reversalOf);
+  sheet(`<div class="stack"><h2>${esc(x.desc)}</h2>
+    <div class="stats"><div><b class="${x.pts>=0?'c-earn':'c-deduct'}">${sgn(x.pts)} DP</b><span>${x.type.toLowerCase()}</span></div><div><b style="font-size:1rem">${fmtDay(x.date)}</b><span>Activity date</span></div></div>
+    <div class="small muted">${esc(cat(x.cat).name)}${x.spend?` · spent ${esc(x.spend)}`:''}${x.note?` · ${esc(x.note)}`:''}<br>Recorded ${new Date(x.ts).toLocaleString()}</div>
+    ${x.reversed?'<div class="pill">This entry was reversed</div>':''}${orig?`<div class="small">Offsets “${esc(orig.desc)}”.</div>`:''}
+    ${x.type==='REDEEM'&&live(x)?'<p class="small muted">To undo a redemption, cancel it from Rewards and the points come back as a refund.</p>':''}
+    ${canFix?`<div class="btns"><button class="btn ghost" data-act="fixtx" data-id="${x.id}">Correct it</button><button class="btn danger" data-act="revtx" data-id="${x.id}">Reverse it</button></div>
+      <p class="small muted" style="margin:0">Both keep the original in your history and add an offsetting entry.</p>`:''}
+    <button class="btn ghost" data-act="close">Close</button></div>`);
+}
+function taskSheet(id,d){
+  const t=S.tasks.find(x=>x.id===id)||{id:'',title:'',start:'',end:'',pts:20,miss:0,cat:'routine',date:d||ui.date,repeat:'none',notes:'',priority:'normal'};
+  sheet(`<div class="stack"><h2>${t.id?'Edit task':'New task'}</h2>
+    <label class="f">Title<input id="tTitle" value="${esc(t.title)}" placeholder="e.g. Interview prep: system design"></label>
+    <div class="grid2"><label class="f">Date<input id="tDate" type="date" value="${t.date}"></label><label class="f">Repeats<select id="tRep">${[['none','Does not repeat'],['daily','Every day'],['weekdays','Weekdays'],['weekly','Every week']].map(([k,l])=>`<option value="${k}" ${t.repeat===k?'selected':''}>${l}</option>`).join('')}</select></label></div>
+    <div class="grid2"><label class="f">Start<input id="tStart" type="time" value="${t.start}"></label><label class="f">End<input id="tEnd" type="time" value="${t.end}"></label></div>
+    <div class="grid2"><label class="f">Points when done<input id="tPts" type="number" inputmode="numeric" min="0" value="${t.pts}"></label><label class="f">Deduct if missed<input id="tMiss" type="number" inputmode="numeric" min="0" value="${t.miss}"></label></div>
+    <div class="grid2"><label class="f">Category<select id="tCat">${catOptions(t.cat)}</select></label><label class="f">Priority<select id="tPri">${['low','normal','high'].map(k=>`<option ${t.priority===k?'selected':''}>${k}</option>`).join('')}</select></label></div>
+    <label class="f">Notes<textarea id="tNotes">${esc(t.notes)}</textarea></label>
+    <div id="tErr" class="err" role="alert"></div>
+    <button class="btn" data-act="savetask" data-id="${t.id}">${t.id?'Save changes':'Add task'}</button>
+    ${t.id&&t.repeat!=='none'?'<p class="small muted" style="margin:0">Point changes apply from now on. Points already earned stay as they were.</p>':''}</div>`);
+}
+function saveTask(id){
+  const title=val('tTitle'),pts=intv('tPts'),miss=intv('tMiss')||0,date=val('tDate');
+  if(!title){$('#tErr').textContent='Give the task a title.';return}
+  if(!(pts>=0)||pts>1000||miss<0||miss>1000){$('#tErr').textContent='Points must be between 0 and 1,000.';return}
+  if(!date){$('#tErr').textContent='Pick a date.';return}
+  const data={title,date,repeat:val('tRep'),start:val('tStart'),end:val('tEnd'),pts,miss,cat:val('tCat'),priority:val('tPri'),notes:val('tNotes')};
+  if(id){Object.assign(S.tasks.find(x=>x.id===id),data)}else S.tasks.push({id:uid(),...data});
+  ui.date=date;closeSheet();commit();toast(id?'Task saved':'Task added');
+}
+function taskMenu(id,d){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;const st=status(t,d);
+  sheet(`<div class="stack"><h2>${esc(t.title)}</h2><div class="small muted">${fmtLong(d)} · currently <b>${st}</b></div>
+    <div class="eyebrow">Set status</div>
+    <div class="chips">${[['done','Done'],['pending','Pending'],['missed','Missed'],['excused','Excused']].map(([k,l])=>`<button class="chip" data-act="setst" data-st="${k}" data-id="${id}" data-d="${d}" aria-pressed="${st===k}">${l}</button>`).join('')}</div>
+    <p class="small muted" style="margin:0">Missed applies its deduction (${t.miss?'−'+t.miss+' DP':'none set'}). Excused never deducts and doesn't count against your day.</p>
+    ${t.repeat==='none'?`<label class="f">Reschedule to<input id="rDate" type="date" value="${addDays(d,1)}"></label><button class="btn ghost" data-act="resched" data-id="${id}" data-d="${d}">Move task</button>`:''}
+    <div class="btns"><button class="btn ghost" data-act="edittask" data-id="${id}" data-d="${d}">Edit</button><button class="btn ghost" data-act="duptask" data-id="${id}">Duplicate</button></div>
+    <div id="delZone"><button class="btn danger" style="width:100%" data-act="deltask" data-id="${id}">${t.repeat==='none'?'Delete task':'Stop repeating from today'}</button></div></div>`);
+}
+function rewardSheet(id){
+  const r=S.rewards.find(x=>x.id===id)||{id:'',name:'',cost:100,cat:'selfcare',wish:false,money:''};
+  sheet(`<div class="stack"><h2>${r.id?'Edit reward':'New reward'}</h2>
+    <label class="f">Reward<input id="wName" value="${esc(r.name)}" placeholder="e.g. Sushi night"></label>
+    <div class="grid2"><label class="f">Price (DP)<input id="wCost" type="number" inputmode="numeric" min="1" value="${r.cost}"></label><label class="f">Real cost (optional)<input id="wMoney" value="${esc(r.money||'')}" placeholder="₹"></label></div>
+    <label class="f">Category<select id="wCat">${catOptions(r.cat)}</select></label>
+    <label class="toggle">On my wishlist<input type="checkbox" id="wWish" ${r.wish?'checked':''}></label>
+    <div id="wErr" class="err" role="alert"></div>
+    <button class="btn" data-act="savereward" data-id="${r.id}">${r.id?'Save reward':'Create reward'}</button>
+    ${r.id?`<button class="btn danger" data-act="archreward" data-id="${r.id}">Remove from marketplace</button>`:''}</div>`);
+}
+function redeemSheet(id){
+  const r=S.rewards.find(x=>x.id===id);const bal=balance();
+  sheet(`<div class="stack"><h2>Redeem ${esc(r.name)}?</h2>
+    <div class="stats"><div><b>${r.cost} DP</b><span>Price</span></div><div><b>${bal-r.cost} DP</b><span>Balance after</span></div></div>
+    ${r.money?`<p class="small muted" style="margin:0">Real cost ${esc(r.money)}. Check it fits your actual budget.</p>`:''}
+    <button class="btn" data-act="confirmredeem" data-id="${id}">Yes, redeem it</button><button class="btn ghost" data-act="close">Not now</button></div>`);
+}
+function ruleSheet(id,type){
+  const r=S.rules.find(x=>x.id===id)||{id:'',name:'',type:type||'EARN',pts:10,cat:'routine',limit:1,active:true};
+  sheet(`<div class="stack"><h2>${r.id?'Edit rule':'New rule'}</h2>
+    <div class="seg"><button data-act="ruletype" data-t="EARN" aria-pressed="${r.type==='EARN'}">Earn</button><button data-act="ruletype" data-t="DEDUCT" aria-pressed="${r.type==='DEDUCT'}">Deduct</button></div><input type="hidden" id="uType" value="${r.type}">
+    <label class="f">Name<input id="uName" value="${esc(r.name)}"></label>
+    <div class="grid2"><label class="f">Points<input id="uPts" type="number" inputmode="numeric" min="1" value="${r.pts}"></label><label class="f">Max per day (0 = no limit)<input id="uLim" type="number" inputmode="numeric" min="0" value="${r.limit}"></label></div>
+    <label class="f">Category<select id="uCat">${catOptions(r.cat)}</select></label>
+    <label class="toggle">Active<input type="checkbox" id="uAct" ${r.active?'checked':''}></label>
+    <div id="uErr" class="err" role="alert"></div>
+    <button class="btn" data-act="saverule" data-id="${r.id}">Save rule</button></div>`);
+}
+function catSheet(id){
+  const c=S.cats.find(x=>x.id===id)||{id:'',name:'',color:'sage'};
+  sheet(`<div class="stack"><h2>${c.id?'Edit category':'New category'}</h2>
+    <label class="f">Name<input id="cName" value="${esc(c.name)}"></label>
+    <div><div class="eyebrow" style="margin-bottom:6px">Colour</div><div class="chips">${COLORS.map(k=>`<button class="chip" data-act="pickcolor" data-c="${k}" aria-pressed="${c.color===k}" style="background:var(--${k}-bg)"><span class="dot" style="display:inline-block;background:var(--${k})"></span> ${k}</button>`).join('')}</div></div>
+    <input type="hidden" id="cColor" value="${c.color}"><div id="cErr" class="err" role="alert"></div>
+    <button class="btn" data-act="savecat" data-id="${c.id}">Save category</button>
+    ${c.id?`<button class="btn danger" data-act="archcat" data-id="${c.id}">Archive category</button>`:''}</div>`);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,id=el.dataset.id,d=el.dataset.d;
+  if(a==='close'){if(e.target===el||el.tagName==='BUTTON')closeSheet();return}
+  e.stopPropagation();
+  switch(a){
+    case 'log':return logSheet('EARN');
+    case 'logtype':return logSheet(el.dataset.t);
+    case 'pickrule':{const r=S.rules.find(x=>x.id===id);$('#lName').value=r.name;$('#lPts').value=r.pts;$('#lCat').value=r.cat;$('#lRule').value=r.id;$('#lErr').textContent='';return}
+    case 'savelog':return saveLog();
+    case 'tx':return txSheet(id);
+    case 'revtx':reverse(id,'Reversed by you');closeSheet();commit();return toast('Entry reversed');
+    case 'fixtx':{const x=S.txs.find(t=>t.id===id);return logSheet(x.pts>=0?'EARN':'DEDUCT',{...x,fixOf:x.id})}
+    case 'filter':ui.filter=el.dataset.f;ui.showAll=false;return render();
+    case 'showall':ui.showAll=true;return render();
+    case 'toggle':{const t=S.tasks.find(x=>x.id===id);const was=status(t,d);setStatus(t,d,was==='done'?'pending':'done');commit();
+      if(was!=='done'){toast(t.pts?`+${t.pts} DP · ${t.title}`:'Done');const b=$('#bal');b&&b.classList.add('burst')}return}
+    case 'taskmenu':return taskMenu(id,d);
+    case 'setst':{const t=S.tasks.find(x=>x.id===id);setStatus(t,d,el.dataset.st);closeSheet();commit();return}
+    case 'resched':{const t=S.tasks.find(x=>x.id===id);const nd=val('rDate');if(!nd)return;setStatus(t,d,'pending');t.date=nd;t.rescheduledFrom=d;closeSheet();commit();return toast('Moved to '+fmtDay(nd))}
+    case 'edittask':return taskSheet(id,d);
+    case 'addtask':return taskSheet('',ui.date);
+    case 'savetask':return saveTask(id);
+    case 'duptask':{const t=S.tasks.find(x=>x.id===id);S.tasks.push({...t,id:uid(),title:t.title+' (copy)'});closeSheet();commit();return toast('Duplicated')}
+    case 'deltask':{$('#delZone').innerHTML=`<div class="stack" style="gap:8px"><b class="small">Sure? Points already earned stay in your wallet.</b><div class="btns"><button class="btn ghost" data-act="close">Keep it</button><button class="btn danger" data-act="deltask2" data-id="${id}">Yes, remove</button></div></div>`;return}
+    case 'deltask2':{const t=S.tasks.find(x=>x.id===id);const y=addDays(today(),-1);
+      if(t.repeat!=="none"&&t.date<=y)t.until=y;else S.tasks=S.tasks.filter(x=>x.id!==id);closeSheet();commit();return toast('Task removed')}
+    case 'pick':ui.date=d;return render();
+    case 'pweek':ui.date=addDays(ui.date,+el.dataset.n);return render();
+    case 'bweek':ui.week=addDays(ui.week,+el.dataset.n);return render();
+    case 'day':return daySheet(d);
+    case 'gotoday':ui.date=d;closeSheet();location.hash='#planner';return;
+    case 'wish':{const r=S.rewards.find(x=>x.id===id);r.wish=!r.wish;return commit()}
+    case 'redeem':return redeemSheet(id);
+    case 'confirmredeem':{const r=S.rewards.find(x=>x.id===id);
+      if(!r||!r.active)return toast('That reward is no longer available.');
+      if(balance()<r.cost){closeSheet();return toast('Not enough DP yet. Nothing was spent.')}
+      const red={id:uid(),rewardId:r.id,name:r.name,pts:r.cost,date:today(),status:'redeemed'};
+      const tx=addTx({type:'REDEEM',pts:-r.cost,desc:r.name,cat:r.cat,key:'redeem:'+red.id,redemptionId:red.id});if(!tx)return;
+      S.reds.push(red);closeSheet();commit();return toast(`Enjoy it! −${r.cost} DP`)}
+    case 'claim':{const r=S.reds.find(x=>x.id===id);r.status='claimed';r.claimedAt=Date.now();commit();return toast('Marked as enjoyed')}
+    case 'refund':{const r=S.reds.find(x=>x.id===id);if(r.status!=='redeemed')return;r.status='refunded';
+      addTx({type:'REFUND',pts:r.pts,desc:'Refund: '+r.name,cat:(S.rewards.find(w=>w.id===r.rewardId)||{}).cat,key:'refund:'+r.id,redemptionId:r.id});commit();return toast(`+${r.pts} DP refunded`)}
+    case 'editreward':return rewardSheet(id);
+    case 'savereward':{const name=val('wName'),cost=intv('wCost');if(!name)return $('#wErr').textContent='Name the reward.';
+      if(!(cost>0)||cost>100000)return $('#wErr').textContent='Price must be a whole number above 0.';
+      const data={name,cost,money:val('wMoney'),cat:val('wCat'),wish:$('#wWish').checked};
+      if(id)Object.assign(S.rewards.find(x=>x.id===id),data);else S.rewards.push({id:uid(),active:true,...data});closeSheet();commit();return toast('Reward saved')}
+    case 'archreward':{S.rewards.find(x=>x.id===id).active=false;closeSheet();commit();return toast('Reward removed')}
+    case 'editrule':return ruleSheet(id,el.dataset.type);
+    case 'ruletype':{$('#uType').value=el.dataset.t;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el));return}
+    case 'saverule':{const name=val('uName'),pts=intv('uPts'),lim=intv('uLim')||0;if(!name)return $('#uErr').textContent='Name the rule.';
+      if(!(pts>0)||pts>10000)return $('#uErr').textContent='Points must be a whole number above 0.';
+      const data={name,pts,limit:Math.max(0,lim),type:val('uType'),cat:val('uCat'),active:$('#uAct').checked};
+      if(id)Object.assign(S.rules.find(x=>x.id===id),data);else S.rules.push({id:uid(),...data});closeSheet();commit();return toast('Rule saved. Past entries keep their old values.')}
+    case 'editcat':return catSheet(id);
+    case 'pickcolor':{$('#cColor').value=el.dataset.c;el.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===el));return}
+    case 'savecat':{const name=val('cName');if(!name)return $('#cErr').textContent='Name the category.';
+      if(id)Object.assign(S.cats.find(x=>x.id===id),{name,color:val('cColor')});else S.cats.push({id:uid(),name,color:val('cColor'),active:true});closeSheet();commit();return}
+    case 'archcat':{S.cats.find(x=>x.id===id).active=false;closeSheet();commit();return toast('Category archived')}
+    case 'saveprofile':{S.profile.name=val('pName').slice(0,40);const tg=intv('pTarget');if(tg>=10&&tg<=100)S.profile.target=tg;commit();return toast('Profile saved')}
+    case 'export':{const json=JSON.stringify(S,null,1);const name=`bloomquest-backup-${today()}.json`;
+      try{const f=new File([json],name,{type:'application/json'});
+        if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'BloomQuest backup'});return toast('Backup shared')}}catch(err){if(err&&err.name==='AbortError')return}
+      try{const u=URL.createObjectURL(new Blob([json],{type:'application/json'}));const l=document.createElement('a');l.href=u;l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);S.lastBackup=Date.now();saveLocal();return toast('Backup downloaded')}catch(err){}
+      return sheet(`<div class="stack"><h2>Your backup</h2><p class="small muted" style="margin:0">Copy this text and keep it somewhere safe.</p><label class="f">Backup data<textarea id="bk" readonly style="min-height:200px;font-size:.75rem">${esc(json)}</textarea></label><button class="btn" data-act="copybk">Copy</button></div>`)}
+    case 'install':{if(installEvt){installEvt.prompt();installEvt=null;render()}return}
+    case 'copybk':{const t=$('#bk');try{await navigator.clipboard.writeText(t.value);toast('Copied')}catch(err){t.select();toast('Selected. Use your copy shortcut.')}return}
+    case 'reset':return sheet(`<div class="stack"><h2>Start over?</h2><p class="small muted" style="margin:0">This wipes your tasks, points, rewards and history and restores the starter setup. Export a backup first if you might want it back.</p><button class="btn danger" data-act="reset2">Yes, wipe everything</button><button class="btn ghost" data-act="close">Cancel</button></div>`);
+    case 'reset2':S=freshState();closeSheet();commit();return toast('Fresh start');
+    case 'importok':{S=pendingImport;pendingImport=null;closeSheet();commit();return toast('Backup restored')}
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if((e.key==='Enter'||e.key===' ')&&e.target.matches('g.node')){e.preventDefault();daySheet(e.target.dataset.d)}});
+let pendingImport=null;
+document.addEventListener('change',e=>{
+  if(e.target.id!=='importFile')return;const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o||!Array.isArray(o.txs)||!Array.isArray(o.tasks))throw 0;pendingImport=o;
+    sheet(`<div class="stack"><h2>Restore this backup?</h2><p class="small muted" style="margin:0">It has ${o.tasks.length} tasks and ${o.txs.length} transactions, and replaces everything here now.</p><button class="btn" data-act="importok">Restore backup</button><button class="btn ghost" data-act="close">Cancel</button></div>`)}
+    catch(err){toast('That file is not a BloomQuest backup.')}};rd.readAsText(f);e.target.value='';
+});
+function daySheet(d){
+  const st=dayStats(d),ts=tasksOn(d),tx=S.txs.filter(x=>x.date===d).sort((a,b)=>a.ts-b.ts),tr=tier(d>today()?null:st.pct);
+  sheet(`<div class="stack"><div><div class="eyebrow">${d===today()?'Today':''}</div><h2>${esc(fmtLong(d))}</h2></div>
+    <span class="tier" style="background:${tr.bg};align-self:flex-start">${tr.name}${st.pct!==null&&d<=today()?' · '+st.pct+'%':''}</span>
+    <div class="stats"><div><b class="c-earn">+${st.earned}</b><span>Earned</span></div><div><b class="c-deduct">−${st.deducted}</b><span>Deducted</span></div><div><b>${sgn(st.net)}</b><span>Net behaviour</span></div><div><b>${st.done}/${st.elig}</b><span>Tasks done</span></div></div>
+    <div><h3 style="margin-bottom:4px">Tasks</h3><div class="list">${ts.length?ts.map(t=>`<div class="item">${catDot(t.cat)}<div class="grow"><div class="t">${esc(t.title)}</div><div class="s">${t.start?fmtTime(t.start)+' · ':''}${status(t,d)}</div></div></div>`).join(''):'<div class="empty">No scheduled tasks.</div>'}</div></div>
+    <div><h3 style="margin-bottom:4px">Points</h3><div class="list">${tx.length?tx.map(txRow).join(''):'<div class="empty">No points logged.</div>'}</div></div>
+    <button class="btn" data-act="gotoday" data-d="${d}">Open in planner</button></div>`);
+}
+
+route();setSync();
+</script>
+
+</body>
+</html>
